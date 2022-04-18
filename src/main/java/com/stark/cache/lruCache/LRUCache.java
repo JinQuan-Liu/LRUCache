@@ -1,10 +1,6 @@
 package com.stark.cache.lruCache;
 
-import java.lang.annotation.Native;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class LRUCache<K, V> {
 	// 最大分片数量，默认为16
@@ -12,7 +8,7 @@ public class LRUCache<K, V> {
 	// 每个分片的缓存大小，默认为1000
 	private final int MAX_SLICE_CACHE_SIZE;
 
-	private HashMap<Integer, LRUHashMap<K, V>> map;
+	private HashMap<Integer, LRUHashMap<K, LRUNode>> map;
 
 	public LRUCache(int maxSliesNum, int maxSliceCacheSize) {
 		if (maxSliesNum < 1) maxSliesNum = 16;
@@ -24,18 +20,25 @@ public class LRUCache<K, V> {
 
 		// 初始化分片
 		for (int i = 0; i < MAX_NUMS_OF_SLICES; i++) {
-			LRUHashMap<K, V> slice = new LRUHashMap<>(MAX_SLICE_CACHE_SIZE);
+			LRUHashMap<K, LRUNode> slice = new LRUHashMap<>(MAX_SLICE_CACHE_SIZE);
 			map.put(i, slice);
 		}
 	}
 
 	public void put(K key, V value) {
-		LRUHashMap<K, V> sliceMap = switchToSlice(key);
+		LRUHashMap<K, LRUNode> sliceMap = switchToSlice(key);
 
 		synchronized (sliceMap) {
 			LRUNode<K, V> node = new LRUNode<>();
 			node.setKey(key);
 			node.setValue(value);
+
+			// 如果已存在该key, 更新value值
+			if (sliceMap.containsKey(key)) {
+				LRUNode<K, V> existNode = sliceMap.get(key);
+				existNode.setValue(value);
+				return;
+			}
 
 			// 缓存达到预设上限，删除尾节点，添加新元素到头节点;没达到上限，直接添加为头节点
 			if (sliceMap.size() >= MAX_SLICE_CACHE_SIZE) {
@@ -46,7 +49,7 @@ public class LRUCache<K, V> {
 	}
 
 	public V get(K key) {
-		LRUHashMap<K, V> sliceMap = switchToSlice(key);
+		LRUHashMap<K, LRUNode> sliceMap = switchToSlice(key);
 
 		synchronized (sliceMap) {
 			if (sliceMap.containsKey(key)) {
@@ -57,12 +60,12 @@ public class LRUCache<K, V> {
 		return null;
 	}
 
-	private LRUHashMap<K, V> switchToSlice(K key) {
+	private LRUHashMap<K, LRUNode> switchToSlice(K key) {
 		int slice = (key.hashCode() & Integer.MAX_VALUE) % MAX_NUMS_OF_SLICES;
 		return map.get(slice);
 	}
 
-	private void addToHead(LRUHashMap<K, V> sliceMap, LRUNode<K, V> node) {
+	private void addToHead(LRUHashMap<K, LRUNode> sliceMap, LRUNode<K, V> node) {
 		if (null == sliceMap.getHead()) {
 			sliceMap.setHead(node);
 			sliceMap.setTail(node);
@@ -74,7 +77,7 @@ public class LRUCache<K, V> {
 		}
 	}
 
-	private void removeTailNode(LRUHashMap<K, V> sliceMap) {
+	private void removeTailNode(LRUHashMap<K, LRUNode> sliceMap) {
 		if (null == sliceMap.getTail()) {
 			return;
 		}
@@ -95,32 +98,32 @@ public class LRUCache<K, V> {
 		sliceMap.setTail(preTail);
 	}
 
-	class LRUHashMap<K, V> extends HashMap<K, V> {
-		private LRUNode<K, V> head;
-		private LRUNode<K, V> tail;
+	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> {
+		private LRUNode head;
+		private LRUNode tail;
 
 		public LRUHashMap(int initialCapacity) {
 			super(initialCapacity);
 		}
 
-		public LRUNode<K, V> getHead() {
+		public LRUNode getHead() {
 			return head;
 		}
 
-		public void setHead(LRUNode<K, V> head) {
+		public void setHead(LRUNode head) {
 			this.head = head;
 		}
 
-		public LRUNode<K, V> getTail() {
+		public LRUNode getTail() {
 			return tail;
 		}
 
-		public void setTail(LRUNode<K, V> tail) {
+		public void setTail(LRUNode tail) {
 			this.tail = tail;
 		}
 	}
 
-	class LRUNode<K, V> {
+	static class LRUNode<K, V> {
 		private LRUNode<K, V> pre;
 		private LRUNode<K, V> next;
 		private K key;

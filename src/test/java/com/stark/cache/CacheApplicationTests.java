@@ -56,14 +56,6 @@ class CacheApplicationTests {
 		}
 	}
 
-	/**
-	 * 测试刚使用过的，是否在头结点
-	 */
-	@Test
-	public void test() {
-
-	}
-
 	private String buildKey(String mid, BigDecimal salePrice) {
 		return mid + "_" + salePrice;
 	}

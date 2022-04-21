@@ -76,6 +76,7 @@ public class LRUCache<K, V> {
 				} else {
 					removeNode(sliceMap, node);
 					addToHead(sliceMap, node);
+					return node.getValue();
 				}
 			}
 			return null;
@@ -97,11 +98,13 @@ public class LRUCache<K, V> {
 		if (null == sliceMap.getHead()) {
 			sliceMap.setHead(node);
 			sliceMap.setTail(node);
+			sliceMap.put(node.getKey(), node);
 		} else {
 			LRUNode<K, V> head = sliceMap.getHead();
 			head.setPre(node);
 			node.setNext(head);
 			sliceMap.setHead(node);
+			sliceMap.put(node.getKey(), node);
 		}
 	}
 
@@ -124,6 +127,7 @@ public class LRUCache<K, V> {
 		preNode.setNext(nextNode);
 		node.setNext(null);
 		node.setPre(null);
+		sliceMap.remove(node.getKey());
 	}
 
 	private void removeHeadNode(LRUHashMap<K, LRUNode> sliceMap) {
@@ -136,6 +140,7 @@ public class LRUCache<K, V> {
 			head.setNext(null);
 			sliceMap.setHead(null);
 			sliceMap.setTail(null);
+			sliceMap.remove(head.getKey());
 			return;
 		}
 		LRUNode<K ,V> nextHead = head.getNext();
@@ -145,6 +150,7 @@ public class LRUCache<K, V> {
 		head.setPre(null);
 		head.setNext(null);
 		sliceMap.setHead(nextHead);
+		sliceMap.remove(head.getKey());
 	}
 
 	private void removeTailNode(LRUHashMap<K, LRUNode> sliceMap) {
@@ -157,6 +163,7 @@ public class LRUCache<K, V> {
 			tail.setPre(null);
 			sliceMap.setHead(null);
 			sliceMap.setTail(null);
+			sliceMap.remove(tail.getKey());
 			return;
 		}
 		LRUNode<K, V> preTail = tail.getPre();
@@ -166,6 +173,7 @@ public class LRUCache<K, V> {
 		tail.setNext(null);
 		tail.setPre(null);
 		sliceMap.setTail(preTail);
+		sliceMap.remove(tail.getKey());
 	}
 
 	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> {

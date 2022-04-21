@@ -21,11 +21,14 @@ public class LRUCache<K, V> {
 	}
 
 	public LRUCache(int maxSliesNum, int maxSliceCacheSize, int expiredTime) {
-		if (maxSliesNum < 1) maxSliesNum = 16;
+		if (maxSliesNum < 1)
+			maxSliesNum = 16;
 		MAX_NUMS_OF_SLICES = maxSliesNum;
-		if (maxSliceCacheSize < 1) maxSliceCacheSize = 1000;
+		if (maxSliceCacheSize < 1)
+			maxSliceCacheSize = 1000;
 		MAX_SLICE_CACHE_SIZE = maxSliceCacheSize;
-		if (expiredTime < 1) expiredTime = 60;
+		if (expiredTime < 1)
+			expiredTime = 60;
 		EXPIRED_TIME = expiredTime * 1000;
 
 		map = new HashMap();
@@ -109,7 +112,8 @@ public class LRUCache<K, V> {
 	}
 
 	private void removeNode(LRUHashMap<K, LRUNode> sliceMap, LRUNode<K, V> node) {
-		if (sliceMap.getHead() == null || sliceMap.getTail() == null) return;
+		if (sliceMap.getHead() == null || sliceMap.getTail() == null)
+			return;
 		// 如果是尾节点
 		if (sliceMap.getTail() != null && sliceMap.getTail().equals(node)) {
 			removeTailNode(sliceMap);
@@ -143,8 +147,8 @@ public class LRUCache<K, V> {
 			sliceMap.remove(head.getKey());
 			return;
 		}
-		LRUNode<K ,V> nextHead = head.getNext();
-		if (nextHead !=  null) {
+		LRUNode<K, V> nextHead = head.getNext();
+		if (nextHead != null) {
 			nextHead.setPre(null);
 		}
 		head.setPre(null);

@@ -43,13 +43,13 @@ public class LRUCache<K, V> {
 	public void put(K key, V value) {
 		LRUHashMap<K, LRUNode> sliceMap = switchToSlice(key);
 
+		LRUNode<K, V> node = new LRUNode<>();
+		node.setKey(key);
+		node.setValue(value);
+		node.setCreateTime(new Date());
+
 		synchronized (sliceMap) {
 			System.out.println(Thread.currentThread().getName() + " begin put key");
-			LRUNode<K, V> node = new LRUNode<>();
-			node.setKey(key);
-			node.setValue(value);
-			node.setCreateTime(new Date());
-
 			// 如果已存在该key, 更新value值
 			if (sliceMap.containsKey(key)) {
 				LRUNode<K, V> existNode = sliceMap.get(key);

@@ -76,24 +76,37 @@ class CacheApplicationTests {
 	 */
 	@Test
 	public void test() throws InterruptedException {
-		LRUCache<String, String> cache = new LRUCache<>(1, 1000, 10);
-
-		CountDownLatch countDownLatch = new CountDownLatch(10000);
-		long beginTime = new Date().getTime();
+		LRUCache<String, String> cache = new LRUCache<>(16, 100, 10);
 		// 存cache
-		for (int i = 0; i < 10000; i++) {
+		for (int i = 0; i < 1600; i++) {
 			int finalI = i;
 			Thread thread = new Thread(() -> {
 				cache.put("" + finalI, "test");
-				cache.get("" + finalI);
-				countDownLatch.countDown();
 			});
 			thread.setName("thread_" + i);
 			thread.start();
 		}
-		countDownLatch.await();
-		long endTime = new Date().getTime();
-		System.out.println("共耗时：" + (endTime - beginTime) + " 毫秒");
+
+		// 100组数据，统计平均耗时
+		long sum = 0;
+		for (int j = 0; j < 100; j++) {
+			CountDownLatch countDownLatch = new CountDownLatch(1600);
+			long beginTime = new Date().getTime();
+			// 取cache
+			for (int i = 0; i < 1600; i++) {
+				int finalI = i;
+				Thread thread = new Thread(() -> {
+					cache.get("" + finalI);
+					countDownLatch.countDown();
+				});
+				thread.setName("thread_" + i);
+				thread.start();
+			}
+			countDownLatch.await();
+			long endTime = new Date().getTime();
+			sum = sum + (endTime - beginTime);
+		}
+		System.out.println("总耗时：" + (sum / 100));
 	}
 
 	private String buildKey(String mid, BigDecimal salePrice) {

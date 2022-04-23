@@ -44,6 +44,7 @@ public class LRUCache<K, V> {
 		LRUHashMap<K, LRUNode> sliceMap = switchToSlice(key);
 
 		synchronized (sliceMap) {
+			System.out.println(Thread.currentThread().getName() + " begin put key");
 			LRUNode<K, V> node = new LRUNode<>();
 			node.setKey(key);
 			node.setValue(value);
@@ -61,6 +62,7 @@ public class LRUCache<K, V> {
 				removeTailNode(sliceMap);
 			}
 			addToHead(sliceMap, node);
+			System.out.println(Thread.currentThread().getName() + " end put key");
 		}
 	}
 
@@ -68,6 +70,7 @@ public class LRUCache<K, V> {
 		LRUHashMap<K, LRUNode> sliceMap = switchToSlice(key);
 
 		synchronized (sliceMap) {
+			System.out.println(Thread.currentThread().getName() + " begin get key");
 			if (sliceMap.containsKey(key)) {
 				// 1.获取节点
 				LRUNode<K, V> node = sliceMap.get(key);
@@ -79,9 +82,11 @@ public class LRUCache<K, V> {
 				} else {
 					removeNode(sliceMap, node);
 					addToHead(sliceMap, node);
+					System.out.println(Thread.currentThread().getName() + " end get key");
 					return node.getValue();
 				}
 			}
+			System.out.println(Thread.currentThread().getName() + " end get key");
 			return null;
 		}
 	}

@@ -7,41 +7,41 @@ import java.util.concurrent.*;
 
 public class LRUCache<K, V> {
 	// 最大分片数量，默认为16
-	private final int MAX_NUMS_OF_SLICES;
+	private final int maxNumsOfSlices;
 	// 每个分片的缓存大小，默认为1000
-	private final int MAX_SLICE_CACHE_SIZE;
+	private final int maxSliceCacheSize;
 	// 缓存过期时间，单位毫秒，默认60秒
-	private final int EXPIRED_TIME;
+	private final int expiredTime;
 
 	private HashMap<Integer, LRUHashMap<K, LRUNode<K, V>>> map;
 
-	private static ExecutorService executorService = new ThreadPoolExecutor(2, 6, 1, TimeUnit.MINUTES,
+	private static final ExecutorService executorService = new ThreadPoolExecutor(2, 6, 1, TimeUnit.MINUTES,
 			new ArrayBlockingQueue<>(1000, true), Executors.defaultThreadFactory(),
 			new ThreadPoolExecutor.DiscardPolicy());
 
 	public LRUCache() {
-		MAX_NUMS_OF_SLICES = 16;
-		MAX_SLICE_CACHE_SIZE = 1000;
-		EXPIRED_TIME = 60 * 1000;
-		new LRUCache(MAX_NUMS_OF_SLICES, MAX_SLICE_CACHE_SIZE, EXPIRED_TIME);
+		maxNumsOfSlices = 16;
+		maxSliceCacheSize = 1000;
+		expiredTime = 60 * 1000;
+		new LRUCache(maxNumsOfSlices, maxSliceCacheSize, expiredTime);
 	}
 
 	public LRUCache(int maxSliesNum, int maxSliceCacheSize, int expiredTime) {
 		if (maxSliesNum < 1)
 			maxSliesNum = 16;
-		MAX_NUMS_OF_SLICES = maxSliesNum;
+		maxNumsOfSlices = maxSliesNum;
 		if (maxSliceCacheSize < 1)
 			maxSliceCacheSize = 1000;
-		MAX_SLICE_CACHE_SIZE = maxSliceCacheSize;
+		this.maxSliceCacheSize = maxSliceCacheSize;
 		if (expiredTime < 1)
 			expiredTime = 60;
-		EXPIRED_TIME = expiredTime * 1000;
+		this.expiredTime = expiredTime * 1000;
 
 		map = new HashMap<Integer, LRUHashMap<K, LRUNode<K, V>>>();
 
 		// 初始化分片
-		for (int i = 0; i < MAX_NUMS_OF_SLICES; i++) {
-			LRUHashMap<K, LRUNode<K, V>> slice = new LRUHashMap<>(MAX_SLICE_CACHE_SIZE);
+		for (int i = 0; i < maxNumsOfSlices; i++) {
+			LRUHashMap<K, LRUNode<K, V>> slice = new LRUHashMap<>(this.maxSliceCacheSize);
 			map.put(i, slice);
 		}
 	}
@@ -63,7 +63,7 @@ public class LRUCache<K, V> {
 			}
 
 			// 缓存达到预设上限，删除尾节点，添加新元素到头节点;没达到上限，直接添加为头节点
-			if (sliceMap.size() >= MAX_SLICE_CACHE_SIZE) {
+			if (sliceMap.size() >= maxSliceCacheSize) {
 				removeTailNode(sliceMap);
 			}
 			addToHead(sliceMap, node);
@@ -72,8 +72,6 @@ public class LRUCache<K, V> {
 
 	public V get(K key) {
 		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
-
-		long startTime = new Date().getTime();
 
 		// 1.获取节点
 		LRUNode<K, V> node = sliceMap.get(key);
@@ -120,7 +118,6 @@ public class LRUCache<K, V> {
 				}
 			});
 
-			long endTime = new Date().getTime();
 			return node.getValue();
 		}
 		return null;
@@ -129,11 +126,11 @@ public class LRUCache<K, V> {
 	public boolean isExpired(Date createTime) {
 		long now = new Date().getTime();
 		long createTimeValue = createTime.getTime();
-		return now - createTimeValue >= EXPIRED_TIME;
+		return now - createTimeValue >= expiredTime;
 	}
 
 	private LRUHashMap<K, LRUNode<K, V>> switchToSlice(K key) {
-		int slice = (key.hashCode() & Integer.MAX_VALUE) % MAX_NUMS_OF_SLICES;
+		int slice = (key.hashCode() & Integer.MAX_VALUE) % maxNumsOfSlices;
 		return map.get(slice);
 	}
 
@@ -220,7 +217,7 @@ public class LRUCache<K, V> {
 		sliceMap.remove(tail.getKey());
 	}
 
-	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> implements Serializable {
+	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> {
 		private LRUNode head;
 		private LRUNode tail;
 

@@ -52,9 +52,9 @@ public class LRUCache<K, V> {
 		LRUNode<K, V> node = new LRUNode<>();
 		node.setKey(key);
 		node.setValue(value);
+		node.setCreateTime(new Date());
 
 		synchronized (sliceMap) {
-			System.out.println(Thread.currentThread().getName() + " begin put key");
 			// 如果已存在该key, 更新value值
 			LRUNode<K, V> existNode = sliceMap.get(key);
 			if (null != existNode) {
@@ -67,14 +67,12 @@ public class LRUCache<K, V> {
 				removeTailNode(sliceMap);
 			}
 			addToHead(sliceMap, node);
-			System.out.println(Thread.currentThread().getName() + " end put key");
 		}
 	}
 
 	public V get(K key) {
 		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
 
-		System.out.println(Thread.currentThread().getName() + " begin get key");
 		long startTime = new Date().getTime();
 
 		// 1.获取节点
@@ -123,29 +121,9 @@ public class LRUCache<K, V> {
 			});
 
 			long endTime = new Date().getTime();
-			System.out.println(Thread.currentThread().getName() + " end get key，excute Times：" + (endTime - startTime));
 			return node.getValue();
 		}
-		System.out.println(Thread.currentThread().getName() + " end get key");
 		return null;
-	}
-
-	public void removeExpired(K key) {
-		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
-
-		System.out.println(Thread.currentThread().getName() + " begin remove key");
-
-		// 1.获取节点
-		LRUNode<K, V> node = sliceMap.get(key);
-		if (null != node) {
-			synchronized (sliceMap) {
-				if (sliceMap.get(key) == null)
-					return;
-				sliceMap.remove(key);
-				removeNode(sliceMap, node);
-			}
-		}
-		System.out.println(Thread.currentThread().getName() + " end remove key");
 	}
 
 	public boolean isExpired(Date createTime) {

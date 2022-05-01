@@ -33,10 +33,10 @@ class CacheApplicationTests {
 		System.out.println("first get key：" + cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())));
 
 		// 判断过期机制是否生效
-		Thread.sleep(6000);
-		if (cache.isExpired(cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())).getCreateTime())) {
-			cache.removeExpired(buildKey(cacheVo.getMid(), cacheVo.getSalePrice()));
-		}
+
+		Thread.sleep(7000);
+		cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice()));
+		Thread.sleep(2000);
 		System.out.println();
 		Assert.isNull(cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())), "参数不为空");
 	}

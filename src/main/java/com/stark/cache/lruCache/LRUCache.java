@@ -1,5 +1,6 @@
 package com.stark.cache.lruCache;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.*;
@@ -86,6 +87,11 @@ public class LRUCache<K, V> {
 					// 安全操作，已被其他线程删除，直接返回
 					if (sliceMap.get(key) == null)
 						return;
+					// 如果已过期，删除该节点
+					if (isExpired(sliceMap.get(key).getCreateTime())) {
+						removeNode(sliceMap, sliceMap.get(key));
+						return;
+					}
 					if (sliceMap.getHead().equals(sliceMap.getTail())) {
 						return;
 					}
@@ -236,7 +242,7 @@ public class LRUCache<K, V> {
 		sliceMap.remove(tail.getKey());
 	}
 
-	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> {
+	static class LRUHashMap<K, LRUNode> extends HashMap<K, LRUNode> implements Serializable {
 		private LRUNode head;
 		private LRUNode tail;
 
@@ -266,6 +272,15 @@ public class LRUCache<K, V> {
 		private LRUNode<K, V> next;
 		private K key;
 		private V value;
+		private Date createTime;
+
+		public Date getCreateTime() {
+			return createTime;
+		}
+
+		public void setCreateTime(Date createTime) {
+			this.createTime = createTime;
+		}
 
 		public LRUNode<K, V> getPre() {
 			return pre;

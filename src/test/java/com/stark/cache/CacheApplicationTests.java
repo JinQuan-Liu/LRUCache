@@ -1,6 +1,6 @@
 package com.stark.cache;
 
-import com.stark.cache.lruCache.LRUCache;
+import com.stark.cache.lruCache.LruCache;
 import com.stark.cache.lruCache.SalePriceCache;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +23,7 @@ class CacheApplicationTests {
 	 */
 	@Test
 	public void testLRUCache() throws InterruptedException {
-		LRUCache<String, SalePriceCache> cache = new LRUCache<>(16, 1000, 5);
+		LruCache<String, SalePriceCache> cache = new LruCache<>(16, 1000, 5);
 		SalePriceCache cacheVo = new SalePriceCache();
 		cacheVo.setMid("11111111");
 		cacheVo.setSalePrice(new BigDecimal("23.5"));
@@ -48,7 +48,7 @@ class CacheApplicationTests {
 	 */
 	@Test
 	public void testMaxCacheSizeAutoClearTailNode() throws InterruptedException {
-		LRUCache<String, SalePriceCache> cache = new LRUCache<>(1, 3, 100);
+		LruCache<String, SalePriceCache> cache = new LruCache<>(1, 3, 100);
 
 		for (int i = 0; i < 4; i++) {
 			SalePriceCache cacheVo = new SalePriceCache();
@@ -68,7 +68,7 @@ class CacheApplicationTests {
 	 */
 	@Test
 	public void test() throws InterruptedException {
-		LRUCache<String, String> cache = new LRUCache<>(4, 400, 10);
+		LruCache<String, String> cache = new LruCache<>(4, 400, 10);
 		// 存cache
 		for (int i = 0; i < 1600; i++) {
 			int finalI = i;

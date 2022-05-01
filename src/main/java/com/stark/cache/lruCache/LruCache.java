@@ -1,11 +1,10 @@
 package com.stark.cache.lruCache;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.*;
 
-public class LRUCache<K, V> {
+public class LruCache<K, V> {
 	// 最大分片数量，默认为16
 	private final int maxNumsOfSlices;
 	// 每个分片的缓存大小，默认为1000
@@ -19,17 +18,17 @@ public class LRUCache<K, V> {
 			new ArrayBlockingQueue<>(1000, true), Executors.defaultThreadFactory(),
 			new ThreadPoolExecutor.DiscardPolicy());
 
-	public LRUCache() {
+	public LruCache() {
 		maxNumsOfSlices = 16;
 		maxSliceCacheSize = 1000;
 		expiredTime = 60 * 1000;
-		new LRUCache(maxNumsOfSlices, maxSliceCacheSize, expiredTime);
+		new LruCache(maxNumsOfSlices, maxSliceCacheSize, expiredTime);
 	}
 
-	public LRUCache(int maxSliesNum, int maxSliceCacheSize, int expiredTime) {
-		if (maxSliesNum < 1)
-			maxSliesNum = 16;
-		maxNumsOfSlices = maxSliesNum;
+	public LruCache(int maxSlicesNum, int maxSliceCacheSize, int expiredTime) {
+		if (maxSlicesNum < 1)
+			maxSlicesNum = 16;
+		maxNumsOfSlices = maxSlicesNum;
 		if (maxSliceCacheSize < 1)
 			maxSliceCacheSize = 1000;
 		this.maxSliceCacheSize = maxSliceCacheSize;

@@ -16,8 +16,8 @@ public class LRUCache<K, V> {
 	private HashMap<Integer, LRUHashMap<K, LRUNode<K, V>>> map;
 
 	private static ExecutorService executorService = new ThreadPoolExecutor(2, 6, 1, TimeUnit.MINUTES,
-			new ArrayBlockingQueue<>(100000, true), Executors.defaultThreadFactory(),
-			new ThreadPoolExecutor.AbortPolicy());
+			new ArrayBlockingQueue<>(1000, true), Executors.defaultThreadFactory(),
+			new ThreadPoolExecutor.DiscardPolicy());
 
 	public LRUCache() {
 		MAX_NUMS_OF_SLICES = 16;

@@ -7,7 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
@@ -28,13 +27,17 @@ class CacheApplicationTests {
 		SalePriceCache cacheVo = new SalePriceCache();
 		cacheVo.setMid("11111111");
 		cacheVo.setSalePrice(new BigDecimal("23.5"));
+		cacheVo.setCreateTime(new Date());
 		cache.put(buildKey(cacheVo.getMid(), cacheVo.getSalePrice()), cacheVo);
 		System.out.println("cache：" + cache);
 		System.out.println("first get key：" + cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())));
 
 		// 判断过期机制是否生效
 		Thread.sleep(6000);
-		System.out.println(cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())));
+		if (cache.isExpired(cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())).getCreateTime())) {
+			cache.removeExpired(buildKey(cacheVo.getMid(), cacheVo.getSalePrice()));
+		}
+		System.out.println();
 		Assert.isNull(cache.get(buildKey(cacheVo.getMid(), cacheVo.getSalePrice())), "参数不为空");
 	}
 
@@ -59,24 +62,13 @@ class CacheApplicationTests {
 		}
 	}
 
-	@Test
-	public void test1() {
-		BigDecimal threshold = new BigDecimal("-0.1");
-		BigDecimal handPrice = new BigDecimal("88.00");
-		BigDecimal externalPrice = new BigDecimal("93.00");
-		System.out.println(handPrice.subtract(externalPrice).divide(externalPrice, 2, RoundingMode.HALF_UP));
-		System.out.println(
-				handPrice.subtract(externalPrice).divide(externalPrice, 2, RoundingMode.HALF_UP).compareTo(threshold)
-						<= 0);
-	}
-
 	/**
 	 * 测试并发存取cache
 	 *
 	 */
 	@Test
 	public void test() throws InterruptedException {
-		LRUCache<String, String> cache = new LRUCache<>(16, 100, 10);
+		LRUCache<String, String> cache = new LRUCache<>(4, 400, 10);
 		// 存cache
 		for (int i = 0; i < 1600; i++) {
 			int finalI = i;

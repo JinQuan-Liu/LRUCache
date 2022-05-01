@@ -98,6 +98,13 @@ class CacheApplicationTests {
 			long endTime = new Date().getTime();
 			sum = sum + (endTime - beginTime);
 		}
+
+		long beginTime = new Date().getTime();
+		for (int i = 0; i < 2000; i++) {
+			cache.get("" + i);
+		}
+		long endTime = new Date().getTime();
+		System.out.println("纯调用平均耗时：" + (endTime - beginTime) * 1.0 / 2000);
 		System.out.println("总耗时：" + (sum / 100));
 	}
 

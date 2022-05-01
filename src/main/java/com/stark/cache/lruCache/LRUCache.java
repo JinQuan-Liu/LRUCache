@@ -2,6 +2,7 @@ package com.stark.cache.lruCache;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.*;
 
 public class LRUCache<K, V> {
 	// 最大分片数量，默认为16
@@ -12,6 +13,10 @@ public class LRUCache<K, V> {
 	private final int EXPIRED_TIME;
 
 	private HashMap<Integer, LRUHashMap<K, LRUNode<K, V>>> map;
+
+	private static ExecutorService executorService = new ThreadPoolExecutor(2, 6, 1, TimeUnit.MINUTES,
+			new ArrayBlockingQueue<>(100000, true), Executors.defaultThreadFactory(),
+			new ThreadPoolExecutor.AbortPolicy());
 
 	public LRUCache() {
 		MAX_NUMS_OF_SLICES = 16;
@@ -69,40 +74,50 @@ public class LRUCache<K, V> {
 		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
 
 		System.out.println(Thread.currentThread().getName() + " begin get key");
+		long startTime = new Date().getTime();
 
 		// 1.获取节点
 		LRUNode<K, V> node = sliceMap.get(key);
 		if (null != node) {
-			// 2.将该节点移动为头结点
-			synchronized (sliceMap) {
-				// 安全操作，已被其他线程删除，直接返回
-				if (sliceMap.get(key) == null)
-					return node.getValue();
-				if (sliceMap.getHead().equals(sliceMap.getTail())) {
-				} else if (sliceMap.getTail() != null && sliceMap.getTail().equals(node)) {
-					// 如果是尾节点
-					LRUNode<K, V> preTail = node.getPre();
-					preTail.setNext(null);
-					sliceMap.setTail(preTail);
-					node.setPre(null);
-					sliceMap.getHead().setPre(node);
-					node.setNext(sliceMap.getHead());
-					sliceMap.setHead(node);
-				} else if (sliceMap.getHead() != null && sliceMap.getHead().equals(node)) {
-				} else {
-					// 如果是中间节点
-					LRUNode<K, V> preNode = node.getPre();
-					LRUNode<K, V> nextNode = node.getNext();
-					nextNode.setPre(preNode);
-					preNode.setNext(nextNode);
+			// 异步操作，节省get操作时间
+			executorService.execute(() -> {
+				// 2.将该节点移动为头结点
+				synchronized (sliceMap) {
+					// 安全操作，已被其他线程删除，直接返回
+					if (sliceMap.get(key) == null)
+						return;
+					if (sliceMap.getHead().equals(sliceMap.getTail())) {
+						return;
+					}
+					if (sliceMap.getHead() != null && sliceMap.getHead().equals(node)) {
+						return;
+					}
+					if (sliceMap.getTail() != null && sliceMap.getTail().equals(node)) {
+						// 如果是尾节点
+						LRUNode<K, V> preTail = node.getPre();
+						preTail.setNext(null);
+						sliceMap.setTail(preTail);
+						node.setPre(null);
+						sliceMap.getHead().setPre(node);
+						node.setNext(sliceMap.getHead());
+						sliceMap.setHead(node);
+					} else {
+						// 如果是中间节点
+						LRUNode<K, V> preNode = node.getPre();
+						LRUNode<K, V> nextNode = node.getNext();
+						nextNode.setPre(preNode);
+						preNode.setNext(nextNode);
 
-					sliceMap.getHead().setPre(node);
-					node.setNext(sliceMap.getHead());
-					node.setPre(null);
-					sliceMap.setHead(node);
+						sliceMap.getHead().setPre(node);
+						node.setNext(sliceMap.getHead());
+						node.setPre(null);
+						sliceMap.setHead(node);
+					}
 				}
-			}
-			System.out.println(Thread.currentThread().getName() + " end get key");
+			});
+
+			long endTime = new Date().getTime();
+			System.out.println(Thread.currentThread().getName() + " end get key，excute Times：" + (endTime - startTime));
 			return node.getValue();
 		}
 		System.out.println(Thread.currentThread().getName() + " end get key");

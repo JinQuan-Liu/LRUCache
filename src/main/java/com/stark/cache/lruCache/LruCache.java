@@ -46,6 +46,7 @@ public class LruCache<K, V> {
 	}
 
 	public void put(K key, V value) {
+		// 找到该key对应的分片
 		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
 
 		LRUNode<K, V> node = new LRUNode<>();
@@ -53,6 +54,7 @@ public class LruCache<K, V> {
 		node.setValue(value);
 		node.setCreateTime(new Date());
 
+		// 对该分片加锁
 		synchronized (sliceMap) {
 			// 如果已存在该key, 更新value值
 			LRUNode<K, V> existNode = sliceMap.get(key);
@@ -61,7 +63,7 @@ public class LruCache<K, V> {
 				return;
 			}
 
-			// 缓存达到预设上限，删除尾节点，添加新元素到头节点;没达到上限，直接添加为头节点
+			// 缓存达到预设上限，删除尾节点，添加新元素到头节点；没达到上限，直接添加为头节点
 			if (sliceMap.size() >= maxSliceCacheSize) {
 				removeTailNode(sliceMap);
 			}
@@ -70,6 +72,7 @@ public class LruCache<K, V> {
 	}
 
 	public V get(K key) {
+		// 找到该 key 对应的分片
 		LRUHashMap<K, LRUNode<K, V>> sliceMap = switchToSlice(key);
 
 		// 1.获取节点
@@ -87,12 +90,15 @@ public class LruCache<K, V> {
 						removeNode(sliceMap, sliceMap.get(key));
 						return;
 					}
+					// 如果链表只有一个节点，直接返回
 					if (sliceMap.getHead().equals(sliceMap.getTail())) {
 						return;
 					}
+					// 如果该节点是头节点，直接返回
 					if (sliceMap.getHead() != null && sliceMap.getHead().equals(node)) {
 						return;
 					}
+					// 如果是尾节点或者中间节点，移动到头节点位置
 					if (sliceMap.getTail() != null && sliceMap.getTail().equals(node)) {
 						// 如果是尾节点
 						LRUNode<K, V> preTail = node.getPre();
